@@ -1,11 +1,15 @@
 <script lang="ts">
     import { browser } from '$app/environment';
     import { onMount } from 'svelte';
+    import CodeMirror from 'svelte-codemirror-editor';
+    import { javascript } from '@codemirror/lang-javascript';
+    import { oneDark } from '@codemirror/theme-one-dark';
     
     let socket: WebSocket | null = null;
     let text = '';
     let files: string[] = [];
     let currentFile = '';
+    let editor: CodeMirror;
   
     onMount(() => {
         if (browser) {
@@ -14,7 +18,7 @@
     });
 
     function initializeWebSocket() {
-        socket = new WebSocket('ws://192.168.89.99:8080');
+        socket = new WebSocket('ws://192.168.139.183:8080');
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -50,8 +54,8 @@
         };
     }
   
-    function updateText(e: Event) {
-        text = (e.target as HTMLTextAreaElement).value;
+    function updateText(value: string) {
+        text = value;
         if (browser && socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({ type: 'UPDATE_TEXT', content: text }));
         } else {
@@ -77,43 +81,109 @@
 </script>
 
 {#if browser}
-    <div>
-        <textarea bind:value={text} on:input={updateText} rows="10" cols="50"></textarea>
-        <button on:click={saveFile}>Save File</button>
-    </div>
-    <div>
-        <h3>Files:</h3>
-        <ul>
-            {#each files as file}
-                <li>
-                    <button on:click={() => loadFile(file)}>{file}</button>
-                </li>
-            {/each}
-        </ul>
+    <div class="app-container">
+        <div class="file-list">
+            <h3>Files:</h3>
+            <ul>
+                {#each files as file}
+                    <li>
+                        <button class="file-button" on:click={() => loadFile(file)}>{file}</button>
+                    </li>
+                {/each}
+            </ul>
+        </div>
+        <div class="editor-container">
+            <CodeMirror
+                bind:value={text}
+                on:change={({ detail }) => updateText(detail)}
+                lang={javascript()}
+                theme={oneDark}
+                styles={{
+                    "&": {
+                        height: "calc(100vh - 60px)",
+                        width: "100%"
+                    }
+                }}
+            />
+            <button class="save-button" on:click={saveFile}>Save File</button>
+        </div>
     </div>
 {/if}
 
 <style>
-    textarea {
-        width: 100%;
-        padding: 10px;
-        font-size: 1.2em;
-        border: 2px solid #ccc;
-        border-radius: 5px;
+    .app-container {
+        display: flex;
+        height: 100vh;
     }
 
-    button {
-        margin-top: 10px;
-        padding: 5px 10px;
-        font-size: 1em;
+    .file-list {
+        width: 250px;
+        background-color: #f0f0f0;
+        padding: 15px;
+        overflow-y: auto;
+        border-right: 1px solid #ddd;
+    }
+
+    .file-list h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #333;
     }
 
     ul {
         list-style-type: none;
         padding: 0;
+        margin: 0;
     }
 
     li {
-        margin-bottom: 5px;
+        margin-bottom: 8px;
+    }
+
+    .file-button {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 0.9em;
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-align: left;
+    }
+
+    .file-button:hover {
+        background-color: #e8e8e8;
+    }
+
+    .editor-container {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .save-button {
+        margin-top: 10px;
+        padding: 8px 16px;
+        font-size: 1em;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        align-self: flex-start;
+    }
+
+    .save-button:hover {
+        background-color: #45a049;
+    }
+
+    :global(.cm-editor) {
+        font-size: 1.2em;
+        border: 2px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 </style>

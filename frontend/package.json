@@ -30,8 +30,12 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@codemirror/lang-javascript": "^6.2.2",
+		"@codemirror/theme-one-dark": "^6.1.2",
 		"axios": "^1.7.7",
+		"codemirror": "^6.0.1",
 		"socket.io-client": "^4.8.0",
+		"svelte-codemirror-editor": "^1.4.1",
 		"ws": "^8.18.0"
 	}
 }
